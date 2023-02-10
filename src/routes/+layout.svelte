@@ -12,7 +12,7 @@
 				<a href="https://docs.huff.sh/tutorial/function-dispatching/#binary-search-dispatching" 
 					target="_blank" rel="noreferrer" class="underline text-blue-700 hover:font-bold">Sorce article</a> - 
 					<a href="https://github.com/eugenioclrc/huff-Binary-Search-Dispatching" 
-					target="_blank" rel="noreferrer" class="underline text-blue-700 hover:font-bold">Sorce code</a> 
+					target="_blank" rel="noreferrer" class="underline text-blue-700 hover:font-bold">Source code</a> 
 					<br />
 					WARNING: This is a demo, do not use it in production.
 				</p>
