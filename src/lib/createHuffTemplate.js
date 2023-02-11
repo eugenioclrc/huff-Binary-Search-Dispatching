@@ -124,7 +124,7 @@ export default function createHuffTemplate(ifaceText) {
         let ret = ident + `// ${e.fullname}\n`;
         const spaces = new Array(25 - e.name.length).fill(' ').join('')
 
-        ret += ident + `dup1 ${e['4bytes']}  eq ${e.name}Jump ${spaces}jumpi;\n`;
+        ret += ident + `dup1 ${e['4bytes']}  eq ${e.name}Jump ${spaces}jumpi\n`;
         return ret;
       }).join('\n') + `\n\n` + ident + `not_found jump\n`;
     }
