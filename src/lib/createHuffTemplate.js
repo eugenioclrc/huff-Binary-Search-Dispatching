@@ -28,7 +28,8 @@ function interfaceFunc(f) {
 
 
 // @ts-ignore
-export default function createHuffTemplate(ifaceText) {
+export default function createHuffTemplate(ifaceText, template = 'binary') {
+  template = template == 'binary' ? 'binary' : 'lineal';
   /*
   [
   // Constructor
@@ -87,8 +88,17 @@ export default function createHuffTemplate(ifaceText) {
       number: parseInt(sigHash[i], 16)
     }
   // @ts-ignore
-  }).sort((a, b) => a.number - b.number);
+  });
 
+  // copy of funcs with default order for linear template
+  const funcsLinear = funcs.slice(0);
+  const linearTemplate = funcs.slice(0).map((e) => {
+    return `
+    // ${e.fullname}
+    dup1 ${exist[e.name] > 1 ? e['4bytes'] : '__FUNC_SIG('+e.name+')'}  eq ${e.name}Jump jumpi
+`; }).join('\n');
+  
+  funcs = funcs.sort((a, b) => a.number - b.number);
 
 
 
@@ -133,7 +143,7 @@ export default function createHuffTemplate(ifaceText) {
       }).join('\n') + `\n\n` + ident + `not_found jump\n`;
     }
     return `
-// pivot${input.pivot} cut on ${input.half.fullname}
+// pivot${input.pivot} cut on ${input.half.fullname} ${input.half['4bytes']}
 dup1 ${exist[input.half.name] > 1 ? input.half['4bytes'] : '__FUNC_SIG('+input.half.name+')'} lt pivot${input.pivot} jumpi
     ${renderPivot(input.pivots[0], deep +1)}
 pivot${input.pivot}:
@@ -154,16 +164,22 @@ pivot${input.pivot}:
 // Define Interface
 ${defaultOrder.map(f => '#define ' + f).join('\n')}
 
+${funcsLinear.map(f => `
+#define macro ${f.uppercase}() = takes (0) returns (0) {
+  // To Be Done
+}` ).join('\n')}
+
 // Function Dispatching
 #define macro MAIN() = takes (1) returns (1) {
     // Identify which function is being called.
     // [func sig]
     0x00 calldataload 0xE0 shr
-    
-${renderPivot(tree)}
+
+${template == 'binary' ? renderPivot(tree) : linearTemplate}
     not_found:
       // Revert if no match is found.
       0x00 dup1 revert
     
-${jumps}`;
+${jumps}
+}`;
 }
