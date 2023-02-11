@@ -61,7 +61,7 @@ export default function createHuffTemplate(ifaceText) {
    */
   let defaultOrder = []
 
-  let exist = {}
+  const exist = {}
   // @ts-ignore
   funcs = funcs.filter(isFunc).map((f, i) => {
     let name = f.split('(')[0].split(' ')[1];
@@ -116,36 +116,37 @@ export default function createHuffTemplate(ifaceText) {
 
   // @ts-ignore
   function renderPivot(input, deep = 0) {
-    const ident = new Array(deep + 2).fill('  ').join('')
+    let ident = '    ';
+    if(deep > 1) {
+      ident += new Array(deep - 1).fill('  ').join('')
+    }
 
     if (!input.half) {
       // @ts-ignore
       return input.map(e => {
-        let ret = ident + `// ${e.fullname}\n`;
-        const spaces = new Array(25 - e.name.length).fill(' ').join('')
+        let ret = ident +`// ${e.fullname}\n`;
+        //const spaces = new Array(25 - e.name.length).fill(' ').join('')
+        let spaces = '  ';
 
-        ret += ident + `dup1 ${e['4bytes']}  eq ${e.name}Jump ${spaces}jumpi\n`;
+        ret += ident + `dup1 ${exist[e.name] > 1 ? e['4bytes'] : '__FUNC_SIG('+e.name+')'}  eq ${e.name}Jump ${spaces}jumpi\n`;
         return ret;
       }).join('\n') + `\n\n` + ident + `not_found jump\n`;
     }
-
     return `
-  ${ident}// pivot${input.pivot} cut on ${input.half.fullname}
-  ${ident}dup1 ${input.half['4bytes']} lt pivot${input.pivot} jumpi
-  ${ident}  ${renderPivot(input.pivots[0], deep +1)}
-  ${ident}pivot${input.pivot}:
-  ${ident}  ${renderPivot(input.pivots[1], deep +1)}
-  `;
+// pivot${input.pivot} cut on ${input.half.fullname}
+dup1 ${exist[input.half.name] > 1 ? input.half['4bytes'] : '__FUNC_SIG('+input.half.name+')'} lt pivot${input.pivot} jumpi
+    ${renderPivot(input.pivots[0], deep +1)}
+pivot${input.pivot}:
+    ${renderPivot(input.pivots[1], deep +1)}
+`.split('\n').map(e => ident+e).join('\n')+'\n';
 
   }
 
   // @ts-ignore
-  const jumps = funcs.map(f =>
-    `
-      // ${f.fullname} 
-      ${f.name}Jump:
-        ${f.uppercase}()
-  `).join('\n');
+  const jumps = funcs.map(f =>`
+    // ${f.fullname} 
+    ${f.name}Jump:
+      ${f.uppercase}()`).join('\n');
 
 
 
